@@ -1,0 +1,4 @@
+/app/Robin/v8_pose_bytetrack_file/build/CMakeFiles/edit_cache.dir
+/app/Robin/v8_pose_bytetrack_file/build/CMakeFiles/rebuild_cache.dir
+/app/Robin/v8_pose_bytetrack_file/build/CMakeFiles/v8_pose_bytetrack_sinkfile.dir
+/app/Robin/v8_pose_bytetrack_file/build/CMakeFiles/v8_pose_bytetrack_RTSPfile.dir

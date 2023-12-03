@@ -1,0 +1,3 @@
+/app/bob/hairdryer_pose/DeepStream/build/CMakeFiles/rebuild_cache.dir
+/app/bob/hairdryer_pose/DeepStream/build/CMakeFiles/edit_cache.dir
+/app/bob/hairdryer_pose/DeepStream/build/CMakeFiles/ByteTracker.dir

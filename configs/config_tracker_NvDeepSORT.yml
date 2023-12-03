@@ -1,0 +1,95 @@
+%YAML:1.0
+################################################################################
+# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+################################################################################
+
+BaseConfig:
+  minDetectorConfidence: 0.0642    # If the confidence of a detector bbox is lower than this, then it won't be considered for tracking
+
+TargetManagement:
+  preserveStreamUpdateOrder: 0    # When assigning new target ids, preserve input streams' order to keep target ids in a deterministic order over multuple runs
+  maxTargetsPerStream: 150    # Max number of targets to track per stream. Recommended to set >10. Note: this value should account for the targets being tracked in shadow mode as well. Max value depends on the GPU memory capacity
+
+  # [Creation & Termination Policy]
+  minIouDiff4NewTarget: 0.7842    # If the IOU between the newly detected object and any of the existing targets is higher than this threshold, this newly detected object will be discarded.
+  minTrackerConfidence: 0.4915    # If the confidence of an object tracker is lower than this on the fly, then it will be tracked in shadow mode. Valid Range: [0.0, 1.0]
+  probationAge: 5    # If the target's age exceeds this, the target will be considered to be valid.
+  maxShadowTrackingAge: 43    # Max length of shadow tracking. If the shadowTrackingAge exceeds this limit, the tracker will be terminated.
+  earlyTerminationAge: 1    # If the shadowTrackingAge reaches this threshold while in TENTATIVE period, the the target will be terminated prematurely.
+
+TrajectoryManagement:
+  useUniqueID: 0    # Use 64-bit long Unique ID when assignining tracker ID.
+
+DataAssociator:
+  dataAssociatorType: 0    # the type of data associator among { DEFAULT= 0 }
+  associationMatcherType: 1    # the type of matching algorithm among { GREEDY=0, CASCADED=1 }
+  checkClassMatch: 1    # If checked, only the same-class objects are associated with each other. Default: true
+
+  # [Association Metric: Mahalanobis distance threshold (refer to DeepSORT paper) ]
+  thresholdMahalanobis: 16.3102    # Threshold of Mahalanobis distance. A detection and a target are not matched if their distance is larger than the threshold.
+
+  # [Association Metric: Thresholds for valid candidates]
+  minMatchingScore4Overall: 0.1789    # Min total score
+  minMatchingScore4SizeSimilarity: 0.2131    # Min bbox size similarity score
+  minMatchingScore4Iou: 0.3731    # Min IOU score
+  minMatchingScore4ReidSimilarity: 0.6182    # Min reid similarity score
+
+  # [Association Metric: Weights for valid candidates]
+  matchingScoreWeight4SizeSimilarity: 0.8207    # Weight for the Size-similarity score
+  matchingScoreWeight4Iou: 0.3811    # Weight for the IOU score
+  matchingScoreWeight4ReidSimilarity: 0.7377    # Weight for the reid similarity
+
+  # [Association Metric: Tentative detections] only uses iou similarity for tentative detections
+  tentativeDetectorConfidence: 0.2241    # If a detection's confidence is lower than this but higher than minDetectorConfidence, then it's considered as a tentative detection
+  minMatchingScore4TentativeIou: 0.2104    # Min iou threshold to match targets and tentative detection
+
+StateEstimator:
+  stateEstimatorType: 2    # the type of state estimator among { DUMMY=0, SIMPLE=1, REGULAR=2 }
+
+  # [Dynamics Modeling]
+  noiseWeightVar4Loc: 0.0927    # weight of process and measurement noise for bbox center; if set, location noise will be proportional to box height
+  noiseWeightVar4Vel: 0.0052    # weight of process and measurement noise for velocity; if set, velocity noise will be proportional to box height
+  useAspectRatio: 1    # use aspect ratio in Kalman filter's observation
+
+ReID:
+  reidType: 1    # The type of reid among { DUMMY=0, DEEP=1 }
+
+  # [Reid Network Info]
+  batchSize: 100    # Batch size of reid network
+  workspaceSize: 1000    # Workspace size to be used by reid engine, in MB
+  reidFeatureSize: 128    # Size of reid feature
+  reidHistorySize: 100    # Max number of reid features kept for one object
+  inferDims: [128, 64, 3]    # Reid network input dimension CHW or HWC based on inputOrder
+  networkMode: 0    # Reid network inference precision mode among {fp32=0, fp16=1, int8=2 }
+
+  # [Input Preprocessing]
+  inputOrder: 1    # Reid network input order among { NCHW=0, NHWC=1 }. Batch will be converted to the specified order before reid input.
+  colorFormat: 0    # Reid network input color format among {RGB=0, BGR=1 }. Batch will be converted to the specified color before reid input.
+  offsets: [0.0, 0.0, 0.0]    # Array of values to be subtracted from each input channel, with length equal to number of channels
+  netScaleFactor: 1.0000    # Scaling factor for reid network input after substracting offsets
+  keepAspc: 1    # Whether to keep aspc ratio when resizing input objects for reid
+
+  # [Paths and Names]
+  inputBlobName: "images"    # Reid network input layer name
+  outputBlobName: "features"    # Reid network output layer name
+  uffFile: "/app/bob/hairdryer_pose/configs/mars-small128.uff"    # Absolute path to reid network uff model   
+  modelEngineFile: "/app/bob/hairdryer_pose/configs/mars-small128.uff_b100_gpu0_fp32.engine"    # Engine file path
+  # calibrationTableFile: "/opt/nvidia/deepstream/deepstream/samples/models/Tracker/calibration.cache" # Calibration table path, only for int32
